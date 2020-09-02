@@ -8,9 +8,12 @@ console.log('renderer')
 
 // In renderer process (web page).
 const { ipcRenderer } = require('electron')
-console.log(ipcRenderer.sendSync('speaker-info', 'ping')) // prints "pong"
-
-ipcRenderer.on('success', (event, arg) => {
-  console.log(arg) // prints "pong"
+ipcRenderer.on('asynchronous-reply', (event, arg) => {
+  console.log(arg) 
 })
-ipcRenderer.send('speaker-info', 'ping')
+
+ipcRenderer.send('speaker-info', 'Received Speaker info!')
+
+ipcRenderer.on('speakerInfo', (event, message) => {
+  console.log("From Main Speaker list",message)
+})

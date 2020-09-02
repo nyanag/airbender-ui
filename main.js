@@ -1,10 +1,14 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow, ipcMain} = require('electron')
+const {app, BrowserWindow, ipcMain, webContents} = require('electron')
 const path = require('path')
 
+const bot = require('./bot').connection;
+const { memberList } = require('./bot');
+
+let mainWindow;
 function createWindow () {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -15,6 +19,10 @@ function createWindow () {
 
   // and load the index.html of the app.
   mainWindow.loadFile('index.html')
+  mainWindow.webContents.on('dom-ready', (event) => {
+    console.log('yay dom ready')
+    getSpeaker();
+  })
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
@@ -24,7 +32,7 @@ function createWindow () {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  createWindow()
+  createWindow();
   
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
@@ -43,12 +51,34 @@ app.on('window-all-closed', function () {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
-const botc = require('./index').bot;
-console.log(botc)
 
-// In main process.
-ipcMain.on('speaker-info', (event, arg) => {
-  console.log(arg) // prints "ping"
-  event.reply('success', 'gotit')
+
+// To get the current users in channel at any point, do:
+console.log("Users currently in channel: ", memberList);
+
+// To get speech change info, listen to this event:
+let cs;
+function getSpeaker(){
+  bot.on('speechChange', currentState => {
+    console.log("CS", currentState);
+    cs = currentState
+    mainWindow.webContents.send('speakerInfo', currentState)
+    // getSpeaker(cs);
+  });
+}
+
+
+// To get info on users in channel, listen to this event (updates memberList whenever users enter/leave channel)
+bot.on('voiceStateUpdate', memberList => {
+    console.log("Channel members: ", memberList);
 })
+// function getSpeaker(cs){
+//   ipcMain.on('speaker-info', (event, arg) => {
+//     console.log("Arg", arg) 
+//     console.log("Event", event)
+//     event.reply('asynchronous-reply', cs)
+//   })
+// }
+
+
 
