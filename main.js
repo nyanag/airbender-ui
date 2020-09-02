@@ -21,6 +21,7 @@ function createWindow () {
   mainWindow.loadFile('index.html')
   mainWindow.webContents.on('dom-ready', (event) => {
     console.log('yay dom ready')
+    getMembers();
     getSpeaker();
   })
 
@@ -56,29 +57,29 @@ app.on('window-all-closed', function () {
 // To get the current users in channel at any point, do:
 console.log("Users currently in channel: ", memberList);
 
+// To get info on users in channel, listen to this event (updates memberList whenever users enter/leave channel)
+
+function getMembers(){
+  console.log(memberList)
+  bot.on('voiceStateUpdate', memberList => {
+    console.log("Channel members: ", memberList);
+    mainWindow.webContents.send('membersInfo', memberList)
+  })
+}
+
 // To get speech change info, listen to this event:
-let cs;
+
 function getSpeaker(){
   bot.on('speechChange', currentState => {
     console.log("CS", currentState);
-    cs = currentState
     mainWindow.webContents.send('speakerInfo', currentState)
-    // getSpeaker(cs);
   });
 }
 
 
-// To get info on users in channel, listen to this event (updates memberList whenever users enter/leave channel)
-bot.on('voiceStateUpdate', memberList => {
-    console.log("Channel members: ", memberList);
-})
-// function getSpeaker(cs){
-//   ipcMain.on('speaker-info', (event, arg) => {
-//     console.log("Arg", arg) 
-//     console.log("Event", event)
-//     event.reply('asynchronous-reply', cs)
-//   })
-// }
+
+
+
 
 
 
